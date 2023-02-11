@@ -3,69 +3,51 @@ import React, {useState} from 'react';
 import {QRCodeSVG} from 'qrcode.react';
 import './QRCode.css'
 import ClipLoader from 'react-spinners/ClipLoader';
-      import Video from 'twilio-video';
-      import jwt_decode from "jwt-decode";
-      import ReactPlayer from 'react-player'
+import AgoraRTC from "agora-rtc-sdk-ng"
+import { AgoraVideoPlayer } from "agora-rtc-react";
+import AgoraUIKit from 'agora-react-uikit';
 
 function QRcode() 
 {
-    
-  const [token, setToken] = useState('');
+  const [data, setData] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [track, setTrack] = useState(null);
   const [participantJoined, setparticipantJoined] = useState(false);
-  
-  
+  const [remoteTrack, setremoteTrack] = useState(null);
 
+  const CHANNEL_NAME = 'rtc8108';
+  const TOKEN = '007eJxTYHA6GKXduFVt+ev3Ensl586c+dTtq9E9pmf7JnfMfd/38McTBYbUJAvLVHPzRLPkxFQT00RjyxTDZFMTc1NLi6RUC3PLVO5jz5MbAhkZZPW6GBkZIBDEZ2coKkm2MDSwYGAAAK7cIvg='; 
+  const APP_ID = 'eb89e77a6cae45a39d1c547598be879e';
+  const UID = 0;
+  const rtcProps = {
+    appId: APP_ID,
+    channel: CHANNEL_NAME, // your agora channel
+    token: TOKEN, // use null or skip if using app in testing mode
+    role: 'audience',
+    enableScreensharing: true
+  };
+  const agoraEngine = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+  agoraEngine.setClientRole('audience');
 
     React.useEffect( () =>{
+
         async function fetchData()
       {
-        setIsLoading(true);
-       let temp = await fetch('http://localhost:3001/api')
-          .then((res) =>{
-            var data = res.json();
-            console.log('resjson is ',data)
-            
-            return data;
-        
-        });
-        ;
-      setToken(JSON.stringify(temp)); 
-            console.log('token is is ',temp.accessTokenReceiver)
-
-                 await Video.connect(temp.accessTokenReceiver, { name: temp.roomName}).then(room => {
-                  room.localParticipant.audioTracks.forEach(publication => {
-                    publication.unpublish();
-                    publication.track.stop();
-                  });
-                  
-                  room.localParticipant.videoTracks.forEach(publication => {
-                    publication.unpublish();
-                    publication.track.stop();
-                  });
-                  console.log(`Successfully joined a Room: ${room}`);
-                  room.once('participantDisconnected', participant => {
-                    setparticipantJoined(false);
-                    console.log(`Participant "${participant.identity}" has disconnected from the Room`);
-                  });
-        room.on('participantConnected', participant => {
-          setparticipantJoined(true);
-          console.log(`A remote Participant connected: ${participant}`);
-          participant.tracks.forEach(publication => {
-            if (publication.isSubscribed) {
-              console.log('i am subscribed');
-              const track = publication.track;
-              setTrack(track);
-              
-          //     // document.getElementById('remote-media-div').appendChild(track.attach());
-            }
-          })
-        });
-      }, error => {
-        console.error(`Unable to connect to Room: ${error.message}`);
-      });
       
+          await agoraEngine.join(APP_ID, CHANNEL_NAME, TOKEN, UID);
+          
+          agoraEngine.on('user-joined',async (user)=>
+          {
+            await agoraEngine.unpublish(agoraEngine.localTracks);
+  
+            console.log('user joined', user);
+            setparticipantJoined(true);
+          });
+
+          
+        setIsLoading(true);
+
+      setData(CHANNEL_NAME +'-'+TOKEN);
+      console.log(`data is ${data}`)
     setIsLoading(false);  
     }
       fetchData();
@@ -76,15 +58,12 @@ function QRcode()
 
     return(
     <div>
-    {participantJoined?<div className='videoContainer'>
-      {/* <video width="750" height="500" controls >
-     {track}  */}
-     {/* <ReactPlayer url={track} playing/> */}
-     {track.attach()}
-     {/* <source src={track} type="video/mp4"/> */}
-{/* </video> */}
-</div>:
-    <div  className='QRCodeContainer'>{isLoading?<ClipLoader/>:<QRCodeSVG className='QRCodeStyle' value={token} />}</div>
+    {participantJoined? <div style={{display: 'flex', width: '50vw', height: '100vh'}}> 
+    <AgoraUIKit rtcProps={rtcProps} connectionData={agoraEngine.remoteUsers[0]} />
+
+    
+    </div>:
+    <div  className='QRCodeContainer'>{isLoading?<ClipLoader/>:<QRCodeSVG className='QRCodeStyle' value={data} />}</div>
     }
     
     </div>
