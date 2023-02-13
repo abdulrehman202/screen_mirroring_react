@@ -6,6 +6,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import AgoraRTC from "agora-rtc-sdk-ng"
 import AgoraUIKit from 'agora-react-uikit';
 import axios from 'axios';
+import { useAlert } from 'react-alert'
 
 class QRcode extends React.Component 
 {
@@ -14,27 +15,9 @@ class QRcode extends React.Component
     {
       //initialization of all the attributes
       super(props);
-      this.agoraEngine = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
-      this.agoraEngine.setClientRole('audience');
       this.APP_ID = 'eb89e77a6cae45a39d1c547598be879e';
 
-      this.agoraEngine.on('user-joined',async (user)=>
-  {
-    //Triggers when a user joins
-
-    //The web-end removes its audio & vide streams
-    await this.agoraEngine.unpublish(this.state.agoraEngine.localTracks);
-
-    console.log('user joined', user);
-    this.setState({participantJoined: true});
-  });
-
-  this.agoraEngine.on('user-left',async (user)=>
-  {
-    //Triggers when user leaves
-    this.setState({participantJoined: false});
-    // reloadQR();
-  });
+      
     
     this.state={
       data: '',
@@ -49,7 +32,32 @@ class QRcode extends React.Component
   async componentDidMount()
   {
     //initialize loading of QR
+    this.agoraEngine = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+    this.agoraEngine.setClientRole('audience');
+
+    this.agoraEngine.on('user-joined', (user)=>
+  {
+    //Triggers when a user joins
+
+    //The web-end removes its audio & video streams
+
+    this.setState({participantJoined: true},async ()=>
+    {
+      await this.agoraEngine.unpublish(this.agoraEngine.localTracks);
+
+      console.log('user joined', user);
+    });
+  });
+
+  this.agoraEngine.on('user-left',async (user)=>
+  {
+    //Triggers when user leaves
+    this.setState({participantJoined: false});
+    // reloadQR();
+  });
+
    await  this.reloadQR();
+
   }
 
   generateChannelName()
@@ -118,34 +126,28 @@ class QRcode extends React.Component
   }
  
       render(){
-    // return (<div  className='QRCodeContainer'>
-    // {this.state.participantJoined? <div style={{display: 'flex', width: '20vw', height: '100vh'}}> 
-    // <AgoraUIKit rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
+
+
+      if(this.state.isLoading)
+      return <ClipLoader/>
+
+      else{
+        if(this.state.participantJoined)
+        return <div style={{display: 'flex', width: '20vw', height: '100vh'}}> 
+    <AgoraUIKit rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
 
     
-    // </div>:
-    // <div  className='QRCodeContainer'>{this.state.isLoading?<ClipLoader/>:
-    
-    // <div>
-    //   <h1>Scan the QR to start sharing screen  {this.state.CHANNEL_NAME}</h1>
-    // <QRCodeSVG className='QRCodeStyle' value={this.state.data} />
-    
-    // </div>
-    // }
-    
-    // </div>
-    // }
-    
-    // </div>);
-
-    return(<div className='QRCodeContainer'>
-<div style={{display: 'flex', width: '50vw', height: '100vh'}}> 
-     <AgoraUIKit rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
-     <label>{this.state.CHANNEL_NAME}</label>
-     <QRCodeSVG className='QRCodeStyle' value={this.state.data} />
     </div>
 
-    </div>);
+    else {
+      return <div className='QRCodeContainer'>
+       <h1>Scan the QR to start sharing screen  {this.state.CHANNEL_NAME}</h1>
+     <QRCodeSVG className='QRCodeStyle' value={this.state.data} />
+    
+     </div>
+    }
+
+    }
     
   }
 }
