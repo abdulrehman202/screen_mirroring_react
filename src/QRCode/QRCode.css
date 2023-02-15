@@ -26,3 +26,18 @@ align-items: center;
   height: 100%;
 
 }
+
+.videoContainer{
+  height: 100%;
+  width: 100%;
+
+}
+
+.video{
+  background-color: black;
+  height:100%;
+  display: flex;
+  justify-self: center;
+  margin: auto;
+
+}

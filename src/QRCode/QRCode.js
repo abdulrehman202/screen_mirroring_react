@@ -6,7 +6,6 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import AgoraRTC from "agora-rtc-sdk-ng"
 import AgoraUIKit from 'agora-react-uikit';
 import axios from 'axios';
-import { useAlert } from 'react-alert'
 
 class QRcode extends React.Component 
 {
@@ -32,30 +31,7 @@ class QRcode extends React.Component
   async componentDidMount()
   {
     //initialize loading of QR
-    this.agoraEngine = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
-    this.agoraEngine.setClientRole('audience');
-
-    this.agoraEngine.on('user-joined', (user)=>
-  {
-    //Triggers when a user joins
-
-    //The web-end removes its audio & video streams
-
-    this.setState({participantJoined: true},async ()=>
-    {
-      await this.agoraEngine.unpublish(this.agoraEngine.localTracks);
-
-      console.log('user joined', user);
-    });
-  });
-
-  this.agoraEngine.on('user-left',async (user)=>
-  {
-    //Triggers when user leaves
-    this.setState({participantJoined: false});
-    // reloadQR();
-  });
-
+    
    await  this.reloadQR();
 
   }
@@ -76,8 +52,36 @@ class QRcode extends React.Component
     return channelName;
   }
 
+  initializeEngine()
+  {
+    this.agoraEngine = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
+    this.agoraEngine.setClientRole('audience');
+
+    this.agoraEngine.on('user-joined', (user)=>
+  {
+    //Triggers when a user joins
+
+    //The web-end removes its audio & video streams
+
+    this.setState({participantJoined: true},async ()=>
+    {
+      await this.agoraEngine.unpublish(this.agoraEngine.localTracks);
+
+      console.log('user joined', user);
+    });
+  });
+
+  this.agoraEngine.on('user-unpublished',async (user)=>
+  {
+    //Triggers when user stops sharing screen
+    this.setState({participantJoined: false});
+    this.reloadQR();
+  });
+  }
+
   async reloadQR()
   { 
+    this.initializeEngine();
     //generate new channel name
     let channelName = this.generateChannelName();
 
@@ -128,15 +132,13 @@ class QRcode extends React.Component
       render(){
 
 
-      if(this.state.isLoading)
+       if(this.state.isLoading)
       return <ClipLoader/>
 
       else{
         if(this.state.participantJoined)
-        return <div style={{display: 'flex', width: '20vw', height: '100vh'}}> 
-    <AgoraUIKit rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
-
-    
+        return <div className='videoContainer' > 
+    <AgoraUIKit className = 'video' rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
     </div>
 
     else {
@@ -147,7 +149,7 @@ class QRcode extends React.Component
      </div>
     }
 
-    }
+    } 
     
   }
 }
