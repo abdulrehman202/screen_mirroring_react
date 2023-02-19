@@ -141,14 +141,14 @@ class QRcode extends React.Component
 
       else{
         if(this.state.participantJoined)
-        return <div style={{display: 'flex', width: '50vw', height: '100vh'}}>
+        return <div  className='videoContainer'><div style={{display: 'flex', width: '30vh', height: '100vh'}}>
           <AgoraUIKit styleProps={{
             localBtnContainer:{
               
   visibility: 'hidden',
             }
           }} rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
-</div>
+</div></div>
 
     else {
       return <div className='QRCodeContainer'>
