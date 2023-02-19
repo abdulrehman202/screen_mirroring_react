@@ -6,6 +6,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import AgoraRTC from "agora-rtc-sdk-ng"
 import AgoraUIKit from 'agora-react-uikit';
 import axios from 'axios';
+import FullScreen from 'fullscreen-react';
 
 class QRcode extends React.Component 
 {
@@ -30,7 +31,7 @@ class QRcode extends React.Component
   }
   async componentDidMount()
   {
-    //initialize loading of QR
+    //initialize loading of QRF:
     
    await  this.reloadQR();
 
@@ -60,9 +61,8 @@ class QRcode extends React.Component
     this.agoraEngine.on('user-joined', (user)=>
   {
     //Triggers when a user joins
-
     //The web-end removes its audio & video streams
-
+    
     this.setState({participantJoined: true},async ()=>
     {
       await this.agoraEngine.unpublish(this.agoraEngine.localTracks);
@@ -70,6 +70,11 @@ class QRcode extends React.Component
       console.log('user joined', user);
     });
   });
+
+  // this.agoraEngine.on('user-published',async (user)=>
+  // {
+  //   this.setState({participantJoined: true});
+  // });
 
   this.agoraEngine.on('user-unpublished',async (user)=>
   {
@@ -101,7 +106,7 @@ class QRcode extends React.Component
       this.setState({TOKEN: newToken['rtcToken']},()=>
       {
         //when token is set, load QR with data
-        this.setState({data: this.state.CHANNEL_NAME +'-'+this.state.TOKEN},async ()=>
+        this.setState({data: this.state.CHANNEL_NAME},async ()=>
       {
         //assign rtcProps
         Object.assign(this.state.rtcProps,{
@@ -130,20 +135,25 @@ class QRcode extends React.Component
   }
  
       render(){
-
-
+        
        if(this.state.isLoading)
       return <ClipLoader/>
 
       else{
         if(this.state.participantJoined)
-        return <div className='videoContainer' > 
-    <AgoraUIKit className = 'video' rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
-    </div>
+        return <div style={{display: 'flex', width: '50vw', height: '100vh'}}>
+          <AgoraUIKit styleProps={{
+            localBtnContainer:{
+              
+  visibility: 'hidden',
+            }
+          }} rtcProps={this.state.rtcProps} connectionData={this.agoraEngine.remoteUsers[0]} />
+</div>
 
     else {
       return <div className='QRCodeContainer'>
-       <h1>Scan the QR to start sharing screen  {this.state.CHANNEL_NAME}</h1>
+       <h1>Scan the QR to start sharing screen</h1>
+       
      <QRCodeSVG className='QRCodeStyle' value={this.state.data} />
     
      </div>

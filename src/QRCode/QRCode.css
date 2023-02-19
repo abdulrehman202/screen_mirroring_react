@@ -11,33 +11,6 @@
 width: 50%;
 height: 50%;
 margin: auto;
-display: flex;
+display: inline-block;
 align-items: center;
-}
-
-.videoContainer{
-  width: 100%;
-  height: 100%;
-  background-color: blueviolet;
-}
-
-.mainContainer{
-  width: 100%;
-  height: 100%;
-
-}
-
-.videoContainer{
-  height: 100%;
-  width: 100%;
-
-}
-
-.video{
-  background-color: black;
-  height:100%;
-  display: flex;
-  justify-self: center;
-  margin: auto;
-
 }
