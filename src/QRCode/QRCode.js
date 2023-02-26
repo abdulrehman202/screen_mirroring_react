@@ -10,15 +10,14 @@ import FullScreen from 'fullscreen-react';
 
 class QRcode extends React.Component 
 {
+
   //This is the main component that renders QR COde and video view
     constructor(props)
     {
       //initialization of all the attributes
       super(props);
       this.APP_ID = 'eb89e77a6cae45a39d1c547598be879e';
-
       
-    
     this.state={
       data: '',
       isLoading: false,
@@ -27,15 +26,19 @@ class QRcode extends React.Component
       TOKEN: null,
       UID: 0,
       rtcProps:{},
+      screenMirrored:false,
     };
+
+    
+
   }
   async componentDidMount()
   {
-    //initialize loading of QRF:
     
-   await  this.reloadQR();
-
+    await this.reloadQR();
+    
   }
+
 
   generateChannelName()
   {
@@ -66,20 +69,22 @@ class QRcode extends React.Component
     this.setState({participantJoined: true},async ()=>
     {
       await this.agoraEngine.unpublish(this.agoraEngine.localTracks);
-
-      console.log('user joined', user);
+      
     });
   });
 
-  // this.agoraEngine.on('user-published',async (user)=>
-  // {
-  //   this.setState({participantJoined: true});
-  // });
+  this.agoraEngine.on('user-published',async (user)=>
+  {
+    this.setState({screenMirrored: true},()=>{
+      
+    
+    });
+  });
 
   this.agoraEngine.on('user-unpublished',async (user)=>
   {
     //Triggers when user stops sharing screen
-    this.setState({participantJoined: false});
+    this.setState({participantJoined: false, screenMirrored: false});
     this.reloadQR();
   });
   }
@@ -94,7 +99,6 @@ class QRcode extends React.Component
    this.setState({isLoading: true,CHANNEL_NAME: channelName},async ()=>
    {
     //once channel name is assigned enter here
-    console.log(`CHANNEELLL NNNAAMMMEEE ISSSS ${this.state.CHANNEL_NAME}`);
     
     //make api call to generate new token
     await axios
@@ -117,13 +121,11 @@ class QRcode extends React.Component
           enableScreensharing: true //always true 
         });
 
-        console.log('obj data is ',this.state.rtcProps);
 
         //joining the channels with the parameters defined above
         await this.agoraEngine.join(this.APP_ID, this.state.CHANNEL_NAME, this.state.TOKEN, this.state.UID);
 
         this.setState({isLoading:false});
-        console.log(`data is ${this.state.data}`);
       });
       });
       
@@ -135,7 +137,7 @@ class QRcode extends React.Component
   }
  
       render(){
-        
+
        if(this.state.isLoading)
       return <ClipLoader/>
 

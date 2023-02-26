@@ -19,7 +19,7 @@
 .QRCodeStyle{
 width: 50%;
 height: 50%;
-margin: auto;
+margin: 20px;
 display: inline-block;
 align-items: center;
 }
